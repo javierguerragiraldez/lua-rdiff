@@ -1,3 +1,9 @@
+/*
+ * lua-rdiff
+ * (c) 2006 Javier Guerra G.
+ * $Id: lua_rdiff.c,v 1.1.1.2 2006-08-12 16:33:34 jguerra Exp $
+ */
+ 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -75,10 +81,6 @@ static rs_result string_fill_cb (rs_job_t *job, rs_buffers_t *buf, void *opaque)
 {
 	lua_cb_obj	*cb = (lua_cb_obj *)opaque;
 	
-/*	printf ("string fill\n");
-	printf (">>cb: *%p:'%s' (%d/%d)\n", cb->buf, cb->buf, cb->len, cb->bufsize);
-	printf (">>buf: *%p:'%s' (%d)\n", buf->next_in, buf->next_in, buf->avail_in);*/
-	
 	assert (cb->buf);
 	assert (cb->bufsize >= 0);
 	
@@ -96,9 +98,6 @@ static rs_result string_fill_cb (rs_job_t *job, rs_buffers_t *buf, void *opaque)
 		buf->eof_in = 1;
 	}
 	
-/*	printf ("saliendo\n");
-	printf ("<<cb: *%p:'%s' (%d/%d)\n", cb->buf, cb->buf, cb->len, cb->bufsize);
-	printf ("<<buf: *%p:'%s' (%d)\n", buf->next_in, buf->next_in, buf->avail_in);*/
 	return RS_DONE;
 }
 
@@ -122,11 +121,7 @@ static rs_result luafunc_fill_cb (rs_job_t *job, rs_buffers_t *buf, void *opaque
 	rs_result	r = RS_DONE;
 	const char	*s;
 	size_t		slen;
-	
-/*	printf ("luafunc_fill_cb\n");
-	printf (">>cb: *%p:'%s' (%d/%d)\n", cb->buf, cb->buf, cb->len, cb->bufsize);
-	printf (">>buf: *%p:'%s' (%d)\n", buf->next_in, buf->next_in, buf->avail_in);*/
-	
+		
 	if (cb->buf != NULL) {
 		r = string_fill_cb (job, buf, opaque);
 		if (!buf->eof_in)
@@ -143,7 +138,6 @@ static rs_result luafunc_fill_cb (rs_job_t *job, rs_buffers_t *buf, void *opaque
 				buf->next_in = cb->buf;
 				buf->avail_in = cb->len;
 				buf->eof_in = 0;
-/*				string_fill_cb (job, buf, opaque);*/
 			} else
 				buf->eof_in = 1;
 			return RS_DONE;
@@ -186,19 +180,13 @@ static rs_result luafunc_rfill_cb (void *opaque, rs_long_t pos, size_t *len, voi
 static rs_result null_sink_cb (rs_job_t *job, rs_buffers_t *buf, void *opaque)
 {
 	lua_cb_obj	*cb = (lua_cb_obj *)opaque;
-	
-/*	printf ("null_sink_cb\n");
-	printf (">>cb: *%p:'%s' (%d/%d)\n", cb->buf, cb->buf, cb->len, cb->bufsize);
-	printf (">>buf: *%p:'%s' (%d)\n", buf->next_out, buf->next_out, buf->avail_out);*/
-	
+		
 	if (buf->next_out == NULL) {
 		assert(buf->avail_out == 0);
 		resize_cbbuf (cb, RS_DEFAULT_BLOCK_LEN);
 		buf->next_out = cb->buf;
 		buf->avail_out = cb->bufsize;
 		
-/*		printf ("<<cb: *%p:'%s' (%d/%d)\n", cb->buf, cb->buf, cb->len, cb->bufsize);
-		printf ("<<buf: *%p:'%s' (%d)\n", buf->next_out, buf->next_out, buf->avail_out);*/
 		return RS_DONE;
 	}
 	
@@ -211,16 +199,12 @@ static rs_result null_sink_cb (rs_job_t *job, rs_buffers_t *buf, void *opaque)
 		buf->avail_out = cb->bufsize - cb->len;
 	}
 	
-/*	printf ("<<cb: *%p:'%s' (%d/%d)\n", cb->buf, cb->buf, cb->len, cb->bufsize);
-	printf ("<<buf: *%p:'%s' (%d)\n", buf->next_out, buf->next_out, buf->avail_out);*/
 	return RS_DONE;
 }
 
 static rs_result luafunc_sink_cb (rs_job_t *job, rs_buffers_t *buf, void *opaque)
 {
 	lua_cb_obj	*cb = (lua_cb_obj *)opaque;
-	
-/*	printf ("luafunc_sink_cb\n");*/
 	
 	if (buf->next_out == NULL) {
 		assert(buf->avail_out == 0);
@@ -275,9 +259,7 @@ static int get_source_cb (lua_State *L, int narg, lua_cb_obj *cb) {
 
 static int get_sink_cb (lua_State *L, int narg, lua_cb_obj *cb) {
 	memset (cb, 0, sizeof (*cb));
-	
-/*	printf ("get_sink_cb, type (%d)=%d\n", narg, lua_type(L, narg));*/
-	
+		
 	switch (lua_type (L, narg)) {
 		
 		case LUA_TNONE:
@@ -291,7 +273,6 @@ static int get_sink_cb (lua_State *L, int narg, lua_cb_obj *cb) {
 			cb->L = L;
 			lua_pushvalue (L, narg);
 			cb->luacb = lua_ref (L, 1);
-/*			printf ("luacb: %d\n", cb->luacb);*/
 			return 1;
 			break;
 		
@@ -324,9 +305,7 @@ static int lrd_signature (lua_State *L) {
 	rs_buffers_t    buf;
 	rs_result       r;
 	lua_cb_obj		source, sink;
-	
-/*	printf ("en signature\n");*/
-	
+		
 	if (!get_source_cb (L, 1, &source))
 		luaL_argerror (L, 1, "Not a suitable source");
 	
@@ -335,9 +314,6 @@ static int lrd_signature (lua_State *L) {
 		luaL_argerror (L, 2, "Not a suitable destination");
 	}
 	
-/* 	printf ("lei parametros...\n");
-	printf ("source: '%s'(%d/%d)\n", source.buf, source.len, source.bufsize);*/
-
 	job = rs_sig_begin (RS_DEFAULT_BLOCK_LEN, RS_DEFAULT_STRONG_LEN);
 	r = rs_job_drive (job, &buf, source.cb, &source, sink.cb, &sink);
 	rs_job_free(job);
@@ -507,11 +483,6 @@ static void set_info (lua_State *L) {
 int luaopen_lua_rdiff (lua_State *L);
 int luaopen_lua_rdiff (lua_State *L)
 {
-/*	luaL_newmetatable(L, TCCStateType);
-	lua_pushliteral(L, "__index");
-	lua_pushvalue(L, -2);
-	lua_rawset(L, -3);
-	luaL_openlib (L, NULL, tcc_meths, 0);*/
 	luaL_openlib (L, "rdiff", rdiff_funcs, 0);
 	set_info (L);
 

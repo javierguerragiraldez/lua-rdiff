@@ -1,3 +1,9 @@
+#
+# lua-rdiff
+# (c) 2006 Javier Guerra G.
+# $Id: Makefile,v 1.1.1.2 2006-08-12 16:33:34 jguerra Exp $
+#
+ 
 # Compilation parameters
 CC = gcc
 CWARNS = -Wall -pedantic \

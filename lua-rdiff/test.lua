@@ -1,7 +1,7 @@
 --
 -- lua_rdiff
 -- (c) 2006 Javier Guerra G.
--- $Id: test.lua,v 1.1.1.2 2006-08-12 16:33:34 jguerra Exp $
+-- $Id: test.lua,v 1.1.1.3 2006-08-13 13:04:49 jguerra Exp $
 --
 
 require "lua_rdiff"
@@ -10,7 +10,7 @@ assert (rdiff)
 function fsrc (f)
 	return function (pos, len)
 		if pos == nil and len == nil then
-			return f:read (25)
+			return f:read (25)			-- reads very small chunks
 		else
 			f:seek ("set", pos)
 			return f:read (len)
@@ -80,33 +80,36 @@ elseif test == "AllFile" then
 	-- CREATE SIGNATURE FILE
 	fA = io.open (aFilename, "rb")
 	fsig = io.open ("test/signature", "wb")
-	r = assert (rdiff.signature (fsrc (fA), fsink (fsig)))
-	print ("signature:", type(r), r)
+	assert (rdiff.signature (fsrc (fA), fsink (fsig)))
 	fA:close()
 	fsig:close()
+	
+	print "done signature"
 	
 	
 	-- CREATE DELTA B-A FILE
 	fsig = io.open ("test/signature", "rb")
 	fB = io.open (bFilename, "rb")
 	fdelta = io.open ("test/delta", "wb")
-	r = assert (rdiff.delta (fsrc (fsig), fsrc (fB), fsink(fdelta)))
-	print ("delta:", type(r), r)
+	assert (rdiff.delta (fsrc (fsig), fsrc (fB), fsink(fdelta)))
 	
 	fsig:close()
 	fB:close ()
 	fdelta:close()
+	
+	print "done delta"
 	
 	
 	-- RECREATE B BASED ON A
 	fdelta = io.open ("test/delta", "rb")
 	fA = io.open (aFilename, "rb")
 	fnew = io.open ("test/new.txt", "wb")
-	r = assert (rdiff.patch (fsrc(fdelta), fsrc(fA), fsink(fnew)))
-	print ("patch:", type(r), r)
+	assert (rdiff.patch (fsrc(fdelta), fsrc(fA), fsink(fnew)))
 	
 	fnew:close()
 	fA:close()
 	fdelta:close ()
+	
+	print "done patch"
 	
 end
